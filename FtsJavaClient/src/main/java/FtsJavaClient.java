@@ -34,7 +34,7 @@ public class FtsJavaClient
         // first, "travel-sample-index-unstored", uses all the default settings, but adds an analyzer,
         // named singleAnalyzer, which uses the "single" tokenizer. The second, "travel-sample-index-stored",
         // was defined with the "Store dynamic fields" box checked, and with the addition of an analyzer named
-        // letterAnalyzer, which uses the "letter" tokenizer.
+        // letterAnalyzer, which uses the "letter" tokenizer...
         //
         // A Match Query analyzes the input text and uses the result as the query-input.
         //
