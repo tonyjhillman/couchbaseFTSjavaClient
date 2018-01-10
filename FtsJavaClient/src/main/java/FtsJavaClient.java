@@ -28,17 +28,23 @@ public class FtsJavaClient
 
         System.out.println('\n');
 
-        // FTS Querying Begins Here
+        // For the successful running of the routines below, three indexes must exist on Couchbase Server, all
+        // applied to the travel-sample bucket. Each of the index-definition files is included in this repository.
+        // The first index, "travel-sample-index-unstored", uses all the default settings. The second,
+        // "travel-sample-index-stored", is identical, except that it has the "Store dynamic fields" box checked (in
+        // the "Advanced" settings area of the UI): this allows content, potentially highlighted, to be returned.
         //
-        // For the successful running of the routines below, two indexes must exist on Couchbase Server. The
-        // first, "travel-sample-index-unstored", uses all the default settings, but adds an analyzer,
-        // named singleAnalyzer, which uses the "single" tokenizer. The second, "travel-sample-index-stored",
-        // was defined with the "Store dynamic fields" box checked, and with the addition of an analyzer named
-        // letterAnalyzer, which uses the "letter" tokenizer...
+        // The third index, "travel-sample-index-hotel-description" only has the description fields of hotel
+        // documents indexed. The index has a custom analyzer named myUnicodeAnalyzer defined on it.
+        //
+        // From this point, queries are performed. A comment is provided with each.
+        //
+        // Issue: Note that I have questions about queries 8 and 9...
+        //
+        // Issue: I'm not sure that the results I'm getting from query 14 are the correct ones...
+        //
         //
         // A Match Query analyzes the input text and uses the result as the query-input.
-        //
-        // Limit the result-set to 10.
         //
         MatchQuery myMatchQuery01 = SearchQuery.match("route");
 
@@ -47,7 +53,7 @@ public class FtsJavaClient
 
         System.out.println("Query 1 (MatchQuery on \"route\" in travel-sample-index-unstored): ");
         System.out.println("\n");
-        System.out.println("Note: The specified index was defined with dynamic fields \"unstored\", and so the output to this query does not matching content: it only shows doc IDs.");
+        System.out.println("Note: The specified index was defined with dynamic fields \"unstored\", and so the output to this query does not include matching content: it only shows doc IDs.");
         System.out.println('\n');
 
         for (SearchQueryRow row : mySearchQueryResult01)
@@ -151,8 +157,7 @@ public class FtsJavaClient
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println('\n');
 
-        // Query 5. On a term. Note that the previously-matched "La Rue Saint Denis!!" would, if specified
-        // as a term, return nothing.
+        // Query 5. On a term. Note that terms do not support analysis.
         //
         // Note that fuzziness is specified as 0. See Query 6, below, for a different fuzziness specification.
         //
@@ -206,17 +211,14 @@ public class FtsJavaClient
 
         // Query 7. Match on a phrase.
         //
-        // FIX: This won't work with more than a certain number of
-        // characters, and won't work with uppercase specified. Both produce zero return.
         //
-        MatchPhraseQuery myMatchPhraseQuery07 = SearchQuery.matchPhrase("the few rooms with")
-                .field("description")
-                .analyzer("standard");
+        MatchPhraseQuery myMatchPhraseQuery07 = SearchQuery.matchPhrase("Eiffel Tower")
+                .field("description");
 
         SearchQueryResult mySearchQueryResult07 = travelSample.query(
-                new SearchQuery( "travel-sample-index-stored", myMatchPhraseQuery07).limit(100).highlight());
+                new SearchQuery( "travel-sample-index-stored", myMatchPhraseQuery07).limit(10).highlight());
 
-        System.out.println("Query 7: (MatchPhrase query on \"the few rooms with\" in \"description\" fields of travel-sample-index-stored): ");
+        System.out.println("Query 7: (MatchPhrase query on \"Eiffel Tower\" in \"description\" fields of travel-sample-index-stored): ");
 
         for (SearchQueryRow row: mySearchQueryResult07)
         {
@@ -230,15 +232,17 @@ public class FtsJavaClient
 
         // Query 8. Phrase query.
         //
-        // Currently returns nothing.
+        // I may not understand how the phrase query is intended to work. I understand it doesn't take an
+        // analyzer. But I did expect it to take a phrase, such as "dorm rooms". Actually, it takes a series
+        // of terms, and returns (is this right?) a result for each conjunction of the terms...
         //
-        PhraseQuery myPhraseQuery08 = SearchQuery.phrase("the few rooms with")
+        PhraseQuery myPhraseQuery08 = SearchQuery.phrase("dorm", "rooms")
                 .field("description");
 
         SearchQueryResult mySearchQueryResult08 = travelSample.query(
-                new SearchQuery( "travel-sample-index-stored", myPhraseQuery08).limit(100).highlight());
+                new SearchQuery( "travel-sample-index-stored", myPhraseQuery08).limit(10).highlight());
 
-        System.out.println("Query 8: (Phrase query on \"the few rooms with\" in \"description\" fields of travel-sample-index-stored): ");
+        System.out.println("Query 8: (Phrase query on \"dorm\" and \"rooms\" in \"description\" fields of travel-sample-index-stored): ");
 
         for (SearchQueryRow row: mySearchQueryResult08)
         {
@@ -250,24 +254,31 @@ public class FtsJavaClient
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println('\n');
 
-        // Query 9. Match with a custom analyzer. The single analyzer ensures that input bytes are a single
-        // token, and won't be broken up at punctuation or special-character boundaries.
+        // Query 9. Match with index that specifies the description field of the hotel-type
+        // documents only.
         //
-        MatchQuery myMatchQuery9 = SearchQuery.match("info@hotelnikkosf.com").field("email")
+        MatchQuery myMatchQuery9 = SearchQuery.match("swanky")
 
-                // This analyzer must be of the "single" type, and must be already defined on
-                // Couchbase Server as "singleAnalyzer").
+                // This analyzer must be already defined on
+                // Couchbase Server as "myUnicodeAnalyzer".
                 //
-                // FIX: Works without the analyzer, but not with!
-                //
-                .analyzer("singleAnalyzer");
+                .analyzer("myUnicodeAnalyzer");
 
+        // The index travel-sample-index-hotel-description specifies that only the "description" field of
+        // "hotel" documents be indexed. It inherits the default analyzer. This query is therefore only
+        // run on those document-fields, and specifies a different analyzer explicitly.
+        //
+        // Odd thing is that the index-definition specifies that the field-content be "stored". However, whereas
+        // other queries (that use the default mapping and the storing of dynamic fields) return the matched
+        // content, this one does not.
+        //
         SearchQueryResult mySearchQueryResult9 = travelSample.query(
-                new SearchQuery( "travel-sample-index-unstored", myMatchQuery9)
+                new SearchQuery( "travel-sample-index-hotel-description", myMatchQuery9)
                         .limit(10)
         );
 
-        System.out.println("Query 9 (MatchQuery on \"between O'Farrell and Ellis\" in \"directions\" fields of travel-sample-index-unstored, using single analyzer, defined on Couchbase Server): ");
+        System.out.println("Query 9 (MatchQuery on \"swanky\" in travel-sample-index-hotel-description, using custom analyzer): ");
+        System.out.println("This index includes the description field of the hotel documents only");
         System.out.println('\n');
 
         for (SearchQueryRow row : mySearchQueryResult9)
