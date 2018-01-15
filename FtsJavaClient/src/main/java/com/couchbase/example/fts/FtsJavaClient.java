@@ -1,4 +1,4 @@
-package main.java;
+package com.couchbase.example.fts;
 
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
