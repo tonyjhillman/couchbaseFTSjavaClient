@@ -17,14 +17,14 @@ public class FtsJavaClient {
         //
         Cluster cluster = CouchbaseCluster.create("localhost");
 
-        System.out.print("Authenticating as administrator." + "\n");
+        System.out.println("Authenticating as administrator.");
         cluster.authenticate("Administrator", "password");
 
         // Open the travel-sample bucket.
         //
         Bucket travelSample = cluster.openBucket("travel-sample");
 
-        System.out.println('\n');
+        System.out.println();
 
         // For the successful running of the routines below, three indexes must exist on Couchbase Server, all
         // applied to the travel-sample bucket. Each of the index-definition files is included in this repository.
@@ -50,18 +50,18 @@ public class FtsJavaClient {
                 new SearchQuery("travel-sample-index-unstored", myMatchQuery01).limit(10));
 
         System.out.println("Query 1 (MatchQuery on \"route\" in travel-sample-index-unstored): ");
-        System.out.println("\n");
+        System.out.println();
         System.out.println("Note: The specified index was defined with dynamic fields \"unstored\", and so the output to this query does not include matching content: it only shows doc IDs.");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult01) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 2. Again, a Match Query.
         //
@@ -76,19 +76,19 @@ public class FtsJavaClient {
                 new SearchQuery("travel-sample-index-stored", myMatchQuery02).limit(10).highlight());
 
         System.out.println("Query 2 (MatchQuery on \"MDG\" in \"destinationairport\" fields of travel-sample-index-stored): ");
-        System.out.println("\n");
+        System.out.println();
         System.out.println("Note: The specified index was defined with dynamic fields \"stored\", and so the output DOES show matching content as well as the doc IDs. Note also");
         System.out.println("that highlighting has been specified in the query, so that matched elements in the content are highlighted with <mark> tags.");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult02) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 3. Again, a Match Query.
         //
@@ -111,7 +111,7 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 3 (MatchQuery on \"La Rue Saint Denis!!\" in \"reviews.content\" fields of travel-sample-index-stored, with standard analyzer): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult03) {
             System.out.println(row);
@@ -119,19 +119,19 @@ public class FtsJavaClient {
 
         // An alternative way of displaying results.
         //
-        System.out.println('\n');
+        System.out.println();
         System.out.println("Here, the same Query 3 results, but delivered as a list by the hits() method on the SearchQueryResult object: ");
         System.out.println(mySearchQueryResult03.hits());
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("Here, again from the Query 3 results, the 3 most frequently referenced countries, then cities, accessed via a \"facet\":  ");
         System.out.println(mySearchQueryResult03.facets());
 
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 4. On a docID.
         //
@@ -146,10 +146,10 @@ public class FtsJavaClient {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 5. On a term. Note that terms do not support analysis.
         //
@@ -171,10 +171,10 @@ public class FtsJavaClient {
 
         System.out.println("Number of rows returned for \"sushi\" with fuzziness of 0 is " + x);
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 6. On the same term as used for Query 5.
         //
@@ -196,10 +196,10 @@ public class FtsJavaClient {
 
         System.out.println("Number of rows returned for \"sushi\" with fuzziness of 2 is " + x);
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 7. Match on a phrase.
         //
@@ -216,10 +216,10 @@ public class FtsJavaClient {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 8. Phrase query.
         //
@@ -239,10 +239,10 @@ public class FtsJavaClient {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 9. Match with index that specifies the description field of the hotel-type
         // documents only.
@@ -269,16 +269,16 @@ public class FtsJavaClient {
 
         System.out.println("Query 9 (MatchQuery on \"swanky\" in travel-sample-index-hotel-description, using custom analyzer): ");
         System.out.println("This index includes the description field of the hotel documents only");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult9) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 10. Conjunction-set of different match queries.
         //
@@ -296,16 +296,16 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 10 (Conjunction of two match queries - \"La Rue Saint Denis!!\" and \"boutique\", respectively on the \"reviews.content\" and \"description\" fields - of travel-sample-index-stored): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult10) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 11: Query String Query. Note the specification of the target-field within the
         // query string.
@@ -318,16 +318,16 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 11 (Query String Query on travel-sample-index-unstored): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult11) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 12: Wildcard Query. Note the specification of the word "boutique", using
         // a wildcard-character.
@@ -342,16 +342,16 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 12 (WildcardQuery on travel-sample-index-stored): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult12) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 13: Numeric Range Query. Returns all documents whose id is between the stated minimum
         // and maximum values.
@@ -364,16 +364,16 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 13 (NumericRangeQuery on travel-sample-index-unstored): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult13) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // Query 14: Regexp Query.
         //
@@ -386,20 +386,20 @@ public class FtsJavaClient {
         );
 
         System.out.println("Query 14 (RegexpQuery on travel-sample-index-stored): ");
-        System.out.println('\n');
+        System.out.println();
 
         for (SearchQueryRow row : mySearchQueryResult14) {
             System.out.println(row);
         }
 
-        System.out.println('\n');
+        System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
-        System.out.println('\n');
+        System.out.println();
 
         // As administrator, disconnect from cluster.
         //
-        System.out.println('\n');
+        System.out.println();
         System.out.println("Administrator disconnecting.");
         cluster.disconnect();
     }
