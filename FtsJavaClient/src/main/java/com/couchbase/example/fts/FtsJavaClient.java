@@ -12,12 +12,10 @@ import com.couchbase.client.java.search.result.SearchQueryRow;
 public class FtsJavaClient {
     public static void main(String[] args) {
         // Access the cluster that is running on the local host, authenticating with
-        // the username and password of the Full Administrator. This
-        // provides all privileges.
+        // the username and password of any user who has the "FTS Searcher" role
+        // for the "travel-sample" bucket.
         //
         Cluster cluster = CouchbaseCluster.create("localhost");
-
-        System.out.println("Authenticating as administrator.");
         cluster.authenticate("Administrator", "password");
 
         // Open the travel-sample bucket.
@@ -400,7 +398,7 @@ public class FtsJavaClient {
         // As administrator, disconnect from cluster.
         //
         System.out.println();
-        System.out.println("Administrator disconnecting.");
+        System.out.println("Disconnecting.");
         cluster.disconnect();
     }
 }
