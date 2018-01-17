@@ -55,11 +55,11 @@
   },
   "sourceType": "couchbase",
   "sourceName": "travel-sample",
-  "sourceUUID": "99e9829898a45ba35f1c9c85dfcdb42b",
+  "sourceUUID": "",
   "sourceParams": {},
   "planParams": {
     "maxPartitionsPerPIndex": 171,
     "numReplicas": 0
   },
-  "uuid": "7648d1bc03dd6d97"
+  "uuid": ""
 }

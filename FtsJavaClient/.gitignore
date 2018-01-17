@@ -1,0 +1,27 @@
+# IntelliJ project files
+.idea/
+*.ipr
+*.iws
+*.iml
+out
+gen
+
+# Eclipse project files
+.classpath
+.project
+.factorypath
+.settings/
+.externalToolBuilders
+
+# Maven
+target/
+
+# Gradle
+.gradle/
+build/
+
+# Java
+hs_err_pid*
+
+# Filesystem metadata
+.DS_Store

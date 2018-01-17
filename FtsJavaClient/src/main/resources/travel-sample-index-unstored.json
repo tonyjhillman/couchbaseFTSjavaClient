@@ -1,5 +1,5 @@
 {
-  "name": "travel-sample-index-stored",
+  "name": "travel-sample-index-unstored",
   "type": "fulltext-index",
   "params": {
     "doc_config": {
@@ -9,8 +9,8 @@
     "mapping": {
       "analysis": {
         "analyzers": {
-          "letterAnalyzer": {
-            "tokenizer": "letter",
+          "singleAnalyzer": {
+            "tokenizer": "single",
             "type": "custom"
           }
         }
@@ -24,7 +24,7 @@
       },
       "default_type": "_default",
       "index_dynamic": true,
-      "store_dynamic": true,
+      "store_dynamic": false,
       "type_field": "type"
     },
     "store": {
@@ -33,11 +33,11 @@
   },
   "sourceType": "couchbase",
   "sourceName": "travel-sample",
-  "sourceUUID": "99e9829898a45ba35f1c9c85dfcdb42b",
+  "sourceUUID": "",
   "sourceParams": {},
   "planParams": {
     "maxPartitionsPerPIndex": 171,
     "numReplicas": 0
   },
-  "uuid": "373a0b412fb9b1bd"
+  "uuid": ""
 }
