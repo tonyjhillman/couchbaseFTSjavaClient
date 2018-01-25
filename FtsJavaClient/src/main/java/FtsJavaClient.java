@@ -9,395 +9,210 @@ import com.couchbase.client.java.search.queries.*;
 import com.couchbase.client.java.search.result.SearchQueryResult;
 import com.couchbase.client.java.search.result.SearchQueryRow;
 
-public class FtsJavaClient
-{
-    private static MatchQuery matchQuery;
+/**
+ * For the successful running of the methods below, three indexes must exist on Couchbase
+ * Server, all applied to the travel-sample bucket. Each of the index-definition files is
+ * included in this repository:
+ *
+ * Thee first index, "travel-sample-index-unstored", uses all the default settings.
+ *
+ * The second, "travel-sample-index-stored", is identical, except that it has the
+ * "Store dynamic fields" box checked (in the "Advanced" settings area of the UI):
+ * this allows content, potentially highlighted, to be returned.
+ *
+ * The third index, "travel-sample-index-hotel-description" only has the description
+ * fields of hotel documents indexed.
+ */
+public class FtsJavaClient {
 
-    private static MatchQuery secondMatchQuery;
+    public static void simpleTextQuery(Bucket bucket){
+        String indexName = "travel-sample-index-unstored";
+        MatchQuery query = SearchQuery.match("swanky");
 
-    private static ConjunctionQuery conjunctionQuery;
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10));
 
-    private static DisjunctionQuery disjunctionQuery;
-
-    private static MatchPhraseQuery matchPhraseQuery;
-
-    private static TermQuery termQuery;
-
-    private static PhraseQuery phraseQuery;
-
-    private static DocIdQuery docIdQuery;
-
-    private static QueryStringQuery queryStringQuery;
-
-    private static WildcardQuery wildcardQuery;
-
-    private static NumericRangeQuery numericRangeQuery;
-
-    private static SearchQueryResult searchQueryResult;
-
-    private static RegexpQuery regexpQuery;
-
-    private static int counter;
-
-    public static void simpleTextQuery (Bucket bucket, String textForQuery,
-                                        String indexName, int maxResultsDisplayed)
-    {
-        matchQuery = SearchQuery.match(textForQuery);
-
-        searchQueryResult = bucket.query(
-                new SearchQuery (indexName, matchQuery).limit(maxResultsDisplayed));
-
-        printResultAndDividers(searchQueryResult);
+        printResult("Simple Text Query", result);
     }
 
-    public static void simpleTextQueryOnStoredField (Bucket bucket, String textForQuery,
-                                                     String indexName, String fieldName,
-                                                     int maxResultsDisplayed)
-    {
-        matchQuery = SearchQuery.match(textForQuery).field(fieldName);
+    public static void simpleTextQueryOnStoredField(Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        MatchQuery query = SearchQuery.match("MDG").field("destinationairport");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery (indexName, matchQuery).limit(maxResultsDisplayed).highlight());
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight());
 
-        printResultAndDividers(searchQueryResult);
+        printResult("Simple Text Query on Stored Field", result);
     }
 
-    public static void textQueryOnStoredFieldWithFacets (Bucket bucket, String textForQuery,
-                                                         String indexName, String fieldName,
-                                                         int maxResultsDisplayed, String facetName,
-                                                         String facetField, int facetLimit)
-    {
-        matchQuery = SearchQuery.match(textForQuery).field(fieldName);
+    public static void simpleTextQueryOnNonDefaultIndex(Bucket bucket){
+        String indexName = "travel-sample-index-hotel-description";
+        MatchQuery query = SearchQuery.match("swanky");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery (indexName, matchQuery).limit(maxResultsDisplayed).highlight()
-                        .addFacet (facetName, SearchFacet.term(facetField, facetLimit)));
+        SearchQueryResult rest = bucket.query(
+                new SearchQuery(indexName, query).limit(10));
+    }
 
-        System.out.println("By row:");
-        for (SearchQueryRow row : searchQueryResult)
-        {
-            System.out.println(row);
-        }
+    public static void textQueryOnStoredFieldWithFacets(Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        MatchQuery query = SearchQuery.match("La Rue Saint Denis!!").field("reviews.content");
+
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight()
+                .addFacet ("Countries Referenced", SearchFacet.term("country", 5)));
+
+        printResult("Match Query with Facet, Result by Row", result);
+
         System.out.println();
+        System.out.println("Match Query with Facet, Result by hits:");
+        System.out.println(result.hits());
 
-        System.out.println("By hits:");
-        System.out.println(searchQueryResult.hits());
         System.out.println();
-
-        System.out.println("By facet: ");
-        System.out.println(searchQueryResult.facets());
-        System.out.println();
+        System.out.println("Match Query with Facet, Result by facet: ");
+        System.out.println(result.facets());
     }
 
-    public static void matchPhraseQueryOnStoredField (Bucket bucket, String phraseForQuery,
-                                                      String indexName, String fieldName,
-                                                      int maxResultsDisplayed)
-    {
-        matchPhraseQuery = SearchQuery.matchPhrase(phraseForQuery).field(fieldName);
+    public static void docIdQueryMethod (Bucket bucket){
+        String indexName = "travel-sample-index-unstored";
+        DocIdQuery query = SearchQuery.docId("hotel_26223", "hotel_28960");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, matchPhraseQuery).limit(maxResultsDisplayed).highlight());
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query));
 
-        printResultAndDividers(searchQueryResult);
+        printResult("DocId Query", result);
     }
 
-    public static void unAnalyzedTermQuery (Bucket bucket, String searchTerm, String indexName,
-                                      String fieldName, int maxResultsDisplayed,
-                                      int fuzzinessLevel)
-    {
-        termQuery = SearchQuery.term(searchTerm).field(fieldName).fuzziness(fuzzinessLevel);
+    public static void unAnalyzedTermQuery(Bucket bucket, int fuzzinessLevel){
+        String indexName = "travel-sample-index-stored";
+        TermQuery query = SearchQuery.term("sushi").field("reviews.content").fuzziness(fuzzinessLevel);
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, termQuery).limit(maxResultsDisplayed).highlight());
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(50).highlight());
 
-        counter = 0;
-
-        for (SearchQueryRow row : searchQueryResult)
-        {
-            System.out.println(row);
-            counter++;
-        }
-
-        System.out.println("Number of rows returned for " + searchTerm + " with fuzziness of "
-                + fuzzinessLevel + " is " + counter);
-
-        printDividers();
+        printResult("Unanalyzed Term Query with Fuzziness Level of " + fuzzinessLevel + ":", result);
     }
 
-    public static void unAnalyzedPhraseQuery (Bucket bucket, String firstTerm, String secondTerm,
-                                        String indexName, String fieldName,
-                                        int maxResultsDisplayed)
-    {
-        phraseQuery = SearchQuery.phrase(firstTerm, secondTerm).field(fieldName);
+    public static void matchPhraseQueryOnStoredField (Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        MatchPhraseQuery query = SearchQuery.matchPhrase("Eiffel Tower").field("description");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery (indexName, phraseQuery).limit(maxResultsDisplayed).highlight());
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight());
 
-        printResultAndDividers(searchQueryResult);
+        printResult("Match Phrase Query, using Analysis", result);
     }
 
-    public static void conjunctionQueryMethod (Bucket bucket, String firstTerm, String firstField,
-                                          String secondTerm, String secondField,
-                                          String indexName, int maxResultsDisplayed)
-    {
-        matchQuery = SearchQuery.match(firstTerm).field(firstField);
+    public static void unAnalyzedPhraseQuery (Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        PhraseQuery query = SearchQuery.phrase("dorm", "rooms").field("description");
 
-        secondMatchQuery = SearchQuery.match(secondTerm).field(secondField);
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight());
 
-        conjunctionQuery = SearchQuery.conjuncts(matchQuery, secondMatchQuery);
-
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, conjunctionQuery).limit(maxResultsDisplayed).highlight());
-
-        printResultAndDividers(searchQueryResult);
+        printResult("Phrase Query, without Analysis", result);
     }
 
-    public static void disjunctionQueryMethod (Bucket bucket, String firstTerm, String firstField,
-                                               String secondTerm, String secondField,
-                                               String indexName, int maxResultsDisplayed,
-                                               int disjunctionSource)
-    {
-        matchQuery = SearchQuery.match(firstTerm).field(firstField);
+    public static void conjunctionQueryMethod (Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        MatchQuery firstQuery = SearchQuery.match("La Rue Saint Denis!!").field("reviews.content");
+        MatchQuery secondQuery = SearchQuery.match("boutique").field("description");
 
-        secondMatchQuery = SearchQuery.match(secondTerm).field(secondField);
+        ConjunctionQuery conjunctionQuery = SearchQuery.conjuncts(firstQuery, secondQuery);
 
-        disjunctionQuery = SearchQuery.disjuncts(matchQuery, secondMatchQuery).min(disjunctionSource);
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, conjunctionQuery).limit(10).highlight());
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, disjunctionQuery).limit(maxResultsDisplayed).highlight());
-
-        printResultAndDividers(searchQueryResult);
+        printResult("Conjunction Query", result);
     }
 
-    public static void docIdQueryMethod (Bucket bucket, String firstDocId, String secondDocId,
-                                    String indexName)
-    {
-        docIdQuery = SearchQuery.docId(firstDocId, secondDocId);
+    public static void queryStringMethod (Bucket bucket){
+        String indexName = "travel-sample-index-unstored";
+        QueryStringQuery query = SearchQuery.queryString("description: Imperial");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, docIdQuery));
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10));
 
-        printResultAndDividers(searchQueryResult);
+        printResult("Query String Query", result);
     }
 
-    public static void queryStringQueryMethod (Bucket bucket, String queryString, String indexName,
-                                          int maxResultsDisplayed)
-    {
-        queryStringQuery = SearchQuery.queryString(queryString);
+    public static void wildCardQueryMethod (Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        WildcardQuery query = SearchQuery.wildcard("bouti*ue").field("description");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, queryStringQuery).limit(maxResultsDisplayed));
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight());
 
-        printResultAndDividers(searchQueryResult);
+        printResult("Wild Card Query", result);
     }
 
-    public static void wildCardQueryMethod (Bucket bucket, String wildcardString, String indexName,
-                                             String fieldName, int maxResultsDisplayed)
-    {
-        wildcardQuery = SearchQuery.wildcard(wildcardString).field(fieldName);
+    public static void numericRangeQueryMethod (Bucket bucket){
+        String indexName = "travel-sample-index-unstored";
+        NumericRangeQuery query = SearchQuery.numericRange().min(10100).max(10200).field("id");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, wildcardQuery).limit(maxResultsDisplayed).highlight());
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10));
 
-        printResultAndDividers(searchQueryResult);
+        printResult("Numeric Range Query", result);
     }
 
-    public static void numericRangeQueryMethod (Bucket bucket, int minimum, int maximum, String fieldName,
-                                                 String indexName, int maxResultsDisplayed)
-    {
-        numericRangeQuery = SearchQuery.numericRange().min(minimum).max(maximum).field(fieldName);
+    public static void regexpQueryMethod (Bucket bucket){
+        String indexName = "travel-sample-index-stored";
+        RegexpQuery query = SearchQuery.regexp("[a-z]").field("description");
 
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, numericRangeQuery).limit(maxResultsDisplayed));
-
-        printResultAndDividers(searchQueryResult);
+        SearchQueryResult result = bucket.query(
+                new SearchQuery(indexName, query).limit(10).highlight());
     }
 
-    public static void regexpQueryMethod (Bucket bucket, String regExp, String fieldName,
-                                           String indexName, int maxResultsDisplayed)
-    {
-        regexpQuery = SearchQuery.regexp(regExp).field(fieldName);
-
-        searchQueryResult = bucket.query(
-                new SearchQuery(indexName, regexpQuery).limit(maxResultsDisplayed).highlight());
-
-        printResultAndDividers(searchQueryResult);
-    }
-
-    public static void printQueryNumber(int queryNumber)
-    {
-        System.out.println("Query " + Integer.toString(queryNumber) +": ");
-        System.out.println();
-    }
-
-    public static void printDividers ()
-    {
+    private static void printResult(String label, SearchQueryResult resultObject){
         System.out.println();
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println("= = = = = = = = = = = = = = = = = = = = = = =");
         System.out.println();
-    }
+        System.out.println(label);
+        System.out.println();
 
-    private static void printResultAndDividers(SearchQueryResult resultObject)
-    {
-        for (SearchQueryRow row : resultObject)
-        {
+        for (SearchQueryRow row : resultObject) {
             System.out.println(row);
         }
-
-        printDividers();
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         // Access the cluster that is running on the local host, authenticating with
         // the username and password of any user who has the "FTS Searcher" role
         // for the "travel-sample" bucket...
         //
         Cluster cluster = CouchbaseCluster.create("localhost");
-
-        System.out.print("Authenticating as administrator." + "\n");
         cluster.authenticate("Administrator", "password");
-
-        // Open the travel-sample bucket.
-        //
         Bucket travelSample = cluster.openBucket("travel-sample");
 
-        System.out.println();
+        simpleTextQuery(travelSample);
 
-        // For the successful running of the routines below, three indexes must exist on Couchbase
-        // Server, all applied to the travel-sample bucket. Each of the index-definition files is
-        // included in this repository:
-        //
-        // The first index, "travel-sample-index-unstored", uses all
-        // the default settings.
-        //
-        // The second, "travel-sample-index-stored", is identical, except that
-        // it has the "Store dynamic fields" box checked (in the "Advanced" settings area of the UI):
-        // this allows content, potentially highlighted, to be returned.
-        //
-        // The third index, "travel-sample-index-hotel-description" only has the description fields
-        // of hotel documents indexed.
-        //
+        simpleTextQueryOnStoredField(travelSample);
 
-        // A Match Query analyzes the input text and uses the result as the query-input. No field
-        // is specified.
-        //
-        printQueryNumber(1);
+        simpleTextQueryOnNonDefaultIndex(travelSample);
 
-        simpleTextQuery(travelSample, "route",
-                "travel-sample-index-unstored", 10);
+        textQueryOnStoredFieldWithFacets(travelSample);
 
-        // Another Match Query, analyzes the input text, and looks for a match on a specific field.
-        //
-        printQueryNumber(2);
+        docIdQueryMethod(travelSample);
 
-        simpleTextQueryOnStoredField(travelSample, "MDG",
-                "travel-sample-index-stored", "destinationairport", 10);
+        unAnalyzedTermQuery(travelSample, 0);
 
-        // Again a Match Query, applies a facet to the results.
-        //
-        printQueryNumber(3);
+        unAnalyzedTermQuery(travelSample, 2);
 
-        textQueryOnStoredFieldWithFacets(travelSample, "La Rue Saint Denis!!",
-                "travel-sample-index-stored", "reviews.content", 10,
-                "Countries Referenced", "country", 5);
+        matchPhraseQueryOnStoredField(travelSample);
 
-        // On a docID.
-        //
-        printQueryNumber(4);
+        unAnalyzedPhraseQuery(travelSample);
 
-        docIdQueryMethod(travelSample, "hotel_26223", "hotel_28960",
-                "travel-sample-index-unstored");
+        conjunctionQueryMethod(travelSample);
 
-        // On a term.
-        //
-        printQueryNumber(5);
+        queryStringMethod(travelSample);
 
-        unAnalyzedTermQuery(travelSample, "sushi",
-                "travel-sample-index-stored", "reviews.content", 50,
-                0);
+        wildCardQueryMethod(travelSample);
 
-        // Same as 5, but with higher fuzziness.
-        //
-        printQueryNumber(6);
+        numericRangeQueryMethod(travelSample);
 
-        unAnalyzedTermQuery(travelSample, "sushi",
-                "travel-sample-index-stored", "reviews.content", 50,
-                2);
+        regexpQueryMethod(travelSample);
 
-        // Match on a phrase, using analysis.
-        //
-        //
-        printQueryNumber(7);
-
-        matchPhraseQueryOnStoredField(travelSample, "Eiffel Tower",
-                "travel-sample-index-stored", "description", 10);
-
-        // Phrase query, without analysis
-        //
-        printQueryNumber(8);
-
-        unAnalyzedPhraseQuery(travelSample, "dorm", "rooms",
-                "travel-sample-index-stored", "description", 10);
-
-        // Match Query, specifying an index that contains the description field of the hotel-type
-        // documents only.
-        //
-        printQueryNumber(9);
-
-        simpleTextQuery(travelSample, "swanky",
-                "travel-sample-index-hotel-description", 10);
-
-        // Conjunction-set of different match queries.
-        //
-        printQueryNumber(10);
-
-        conjunctionQueryMethod(travelSample, "La Rue Saint Denis!!", "reviews.content",
-                "boutique", "description", "travel-sample-index-stored",
-                10);
-
-        // Disjunction-set of different match queries.
-        //
-        printQueryNumber(100);
-
-        disjunctionQueryMethod(travelSample,"La Rue Saint Denis!!", "reviews.content",
-                "boutique", "description", "travel-sample-index-stored",
-                10, 0);
-
-        // Query String Query.
-        //
-        printQueryNumber(11);
-
-        queryStringQueryMethod(travelSample, "description: Imperial",
-                "travel-sample-index-unstored", 10);
-
-        // Wildcard Query. Note the specification of the word "boutique", using
-        // a wildcard-character.
-        //
-        printQueryNumber(12);
-
-        wildCardQueryMethod(travelSample, "bouti*ue", "travel-sample-index-stored",
-                "description", 10);
-
-        // Numeric Range Query. Returns all documents whose id is between the stated minimum
-        // and maximum values.
-        //
-        printQueryNumber(13);
-
-        numericRangeQueryMethod (travelSample, 10100, 10200, "id",
-                "travel-sample-index-unstored", 10);
-
-        // Regexp Query.
-        //
-        printQueryNumber(14);
-
-        regexpQueryMethod(travelSample, "[a-z]", "description",
-                "travel-sample-index-stored", 10);
-
-        // Disconnect from the cluster.
-        //
-        System.out.println("Disconnecting.");
         cluster.disconnect();
     }
 }
