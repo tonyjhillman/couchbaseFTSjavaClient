@@ -11,8 +11,7 @@ import com.couchbase.client.java.search.result.SearchQueryRow;
 
 /**
  * For the successful running of the methods below, three indexes must exist on Couchbase
- * Server, all applied to the travel-sample bucket. Each of the index-definition files is
- * included in this repository:
+ * Server, all applied to the travel-sample bucket.
  *
  * Thee first index, "travel-sample-index-unstored", uses all the default settings.
  *
