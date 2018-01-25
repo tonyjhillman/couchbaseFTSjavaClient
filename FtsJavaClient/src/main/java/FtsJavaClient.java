@@ -160,6 +160,8 @@ public class FtsJavaClient {
 
         SearchQueryResult result = bucket.query(
                 new SearchQuery(indexName, query).limit(10).highlight());
+
+        printResult("Regexp Query", result);
     }
 
     private static void printResult(String label, SearchQueryResult resultObject){
